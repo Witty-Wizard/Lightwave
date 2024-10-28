@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Initialize time pickers
   var timepickerElems = document.querySelectorAll(".timepicker");
   M.Timepicker.init(timepickerElems, {
-    twelveHour: true, // Enable AM/PM format
+    twelveHour: true,
     defaultTime: "now",
     autoClose: true,
   });
@@ -17,15 +17,14 @@ document.addEventListener("DOMContentLoaded", function () {
 document
   .getElementById("wifiForm")
   .addEventListener("submit", function (event) {
-    event.preventDefault(); // Prevent the form from submitting normally
-
+    event.preventDefault();
     const ssid = document.getElementById("ssid").value;
     const password = document.getElementById("password").value;
 
     fetch("/connect", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ssid: ssid, password: password }),
+      body: JSON.stringify({ ssid, password }),
     })
       .then((response) => response.text())
       .then((data) => {
@@ -42,8 +41,7 @@ document
 document
   .getElementById("setupForm")
   .addEventListener("submit", function (event) {
-    event.preventDefault(); // Prevent the form from submitting normally
-
+    event.preventDefault();
     const onTime = document.getElementById("onTime").value;
     const offTime = document.getElementById("offTime").value;
 
@@ -56,7 +54,7 @@ document
     fetch("/setup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ onTime: onTime, offTime: offTime }),
+      body: JSON.stringify({ onTime, offTime }),
     })
       .then((response) => response.text())
       .then((data) => {
@@ -66,5 +64,28 @@ document
         console.error("Error:", error);
         document.getElementById("setupResponse").innerText =
           "Error: Unable to save settings";
+      });
+  });
+
+// Set Current Time Form Submission
+document
+  .getElementById("timeForm")
+  .addEventListener("submit", function (event) {
+    event.preventDefault();
+    const currentTime = document.getElementById("currentTime").value;
+
+    fetch("/setTime", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ currentTime }),
+    })
+      .then((response) => response.text())
+      .then((data) => {
+        document.getElementById("timeResponse").innerText = data;
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        document.getElementById("timeResponse").innerText =
+          "Error: Unable to set time";
       });
   });

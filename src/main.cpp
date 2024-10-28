@@ -26,25 +26,4 @@ void setup() {
 }
 
 void loop() {
-  if (!rtcFailed) {
-    DateTime now = rtc.now(); // Get the current time
-
-    // Print the current time in a readable format
-    Serial.print("Current time: ");
-    Serial.print(now.year());
-    Serial.print('/');
-    Serial.print(now.month());
-    Serial.print('/');
-    Serial.print(now.day());
-    Serial.print(" ");
-    Serial.print(now.hour());
-    Serial.print(':');
-    Serial.print(now.minute());
-    Serial.print(':');
-    Serial.println(now.second());
-  } else {
-    Serial.println("RTC is not available.");
-  }
-
-  delay(1000); // Wait for a second before printing again
 }

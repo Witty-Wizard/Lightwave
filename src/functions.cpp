@@ -212,6 +212,50 @@ void handleWebServer() {
         }
       });
 
+  server.on(
+      "/setTime", HTTP_POST, [](AsyncWebServerRequest *request) {}, nullptr,
+      [](AsyncWebServerRequest *request, uint8_t *data, size_t len,
+         size_t index, size_t total) {
+        // Static variable to accumulate the incoming body data
+        static String body;
+
+        // Accumulate data chunks into the body string
+        body += String((char *)data).substring(0, len);
+
+        // If the entire body is received
+        if (index + len == total) {
+          // Create a JSON document to parse the body
+          JsonDocument doc;
+
+          // Parse the JSON payload
+          DeserializationError error = deserializeJson(doc, body);
+
+          // Clear the body string for the next request
+          body = "";
+
+          // Check for JSON parsing errors
+          if (error) {
+            Serial.print("JSON parsing failed: ");
+            Serial.println(error.c_str());
+            request->send(400, "text/plain", "Invalid JSON");
+            return;
+          }
+
+          // Extract onTime and offTime from the JSON document
+          String currentTime = doc["currentTime"] | "";
+
+          // Check if both onTime and offTime are present
+          if (currentTime != "") {
+            DateTime parsedTime = stringToDateTime(currentTime.c_str());
+            rtc.adjust(parsedTime);
+            request->send(200, "text/plain",
+                          "Time settings received and saved successfully.");
+          } else {
+            request->send(400, "text/plain", "Missing Current Time");
+          }
+        }
+      });
+
   server.serveStatic("/", LittleFS, "/");
   server.begin();
   Serial.println("Web server started");
@@ -304,4 +348,40 @@ bool handleRTC() {
 
   Serial.println("RTC initialized successfully.");
   return true;
+}
+
+DateTime stringToDateTime(const char *timeString) {
+  // Check if the timeString length is valid (8 or 9 characters: "hh:mm AM/PM")
+  size_t len = strlen(timeString);
+  if (len < 8 || len > 9 || timeString[2] != ':' ||
+      (strstr(timeString, "AM") == nullptr &&
+       strstr(timeString, "PM") == nullptr)) {
+    Serial.println("Invalid time format");
+    return DateTime(2000, 1, 1, 0, 0, 0); // Return a default DateTime on error
+  }
+
+  // Extract the hour, minute, and period (AM/PM) components
+  int hour = (timeString[0] - '0') * 10 + (timeString[1] - '0');
+  int minute = (timeString[3] - '0') * 10 + (timeString[4] - '0');
+  char period[3] = {timeString[len - 2], timeString[len - 1], '\0'};
+
+  // Validate the hour, minute, and period
+  if (hour < 1 || hour > 12 || minute < 0 || minute > 59 ||
+      (strcmp(period, "AM") != 0 && strcmp(period, "PM") != 0)) {
+    Serial.println("Invalid hour, minute, or period value");
+    return DateTime(2000, 1, 1, 0, 0, 0); // Return a default DateTime on error
+  }
+
+  // Convert hour to 24-hour format
+  if (strcmp(period, "PM") == 0 && hour != 12) {
+    hour += 12;
+  } else if (strcmp(period, "AM") == 0 && hour == 12) {
+    hour = 0;
+  }
+
+  // Get the current date from the RTC
+  DateTime now = rtc.now();
+
+  // Create a new DateTime object with the parsed time and current date
+  return DateTime(now.year(), now.month(), now.day(), hour, minute, 0);
 }
