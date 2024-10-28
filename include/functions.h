@@ -1,17 +1,17 @@
 /**
  * @file functions.h
  * @brief Function declarations for Wi-Fi handling, configuration, mDNS setup,
- * and web server management.
+ * RTC management, NTP synchronization, and web server management.
  *
  * This header file declares functions for loading configuration, handling Wi-Fi
- * station and AP modes, setting up mDNS, and managing the web server for the
- * ESP32 device.
+ * station and AP modes, setting up mDNS, managing the web server for the
+ * ESP32 device, and synchronizing time using RTC and NTP.
  *
  * @note The functions defined here are intended for managing network
- * connections and serving files from LittleFS to create a web interface for the
- * ESP32.
+ * connections, time synchronization, and serving files from LittleFS to create
+ * a web interface for the ESP32.
  *
- * @version 1.0
+ * @version 1.1
  * @date 2024-10-28
  * @author WittyWizard
  */
@@ -121,16 +121,43 @@ bool updateWiFiCredentials(const char *newSSID, const char *newPassword);
  */
 bool saveTimeSettings(const char *onTime, const char *offTime);
 
+/**
+ * @brief Initializes and configures the RTC for the device.
+ *
+ * This function sets up the Real Time Clock (RTC) on the ESP32 device. It
+ * should be called during the setup process to ensure the RTC is running and
+ * has accurate time. If the RTC fails to initialize, the function returns
+ * false.
+ *
+ * @return true if the RTC is successfully initialized, false otherwise.
+ */
 bool handleRTC();
 
 /**
  * @brief Converts a time string in "hh:mm AM/PM" format (char*) to a DateTime
  * object based on the current date from the RTC.
  *
+ * This function takes a time string in the format "hh:mm AM/PM" and converts it
+ * to a DateTime object using the current date obtained from the RTC. If the
+ * time string is invalid, the function returns a default DateTime object set to
+ * 2000-01-01 00:00:00.
+ *
  * @param timeString The time string in the format "hh:mm AM/PM" as a char*.
  * @return DateTime The DateTime object representing the parsed time, or a
  * default DateTime (2000-01-01 00:00:00) if parsing fails.
  */
 DateTime stringToDateTime(const char *timeString);
+
+/**
+ * @brief Updates the RTC time using the NTP server.
+ *
+ * This function synchronizes the Real Time Clock (RTC) with the NTP server
+ * time. It fetches the current time from the configured NTP server and sets the
+ * RTC with the updated time. It should be called after Wi-Fi is connected.
+ *
+ * @return true if the RTC is successfully updated from the NTP server, false
+ * otherwise.
+ */
+bool updateRTCFromNTP();
 
 #endif // FUNCTIONS_H
