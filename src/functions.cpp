@@ -1,6 +1,8 @@
 #include "functions.h"
 #include <ESPAsyncWebServer.h>
 #include <ESPmDNS.h>
+#include <RTClib.h>
+#include <SPI.h>
 #include <WiFi.h>
 
 JsonDocument loadConfiguration() {
@@ -290,5 +292,16 @@ bool saveTimeSettings(const char *onTime, const char *offTime) {
   file.close();
   Serial.println("Time settings saved successfully to /time.json");
   ESP.restart();
+  return true;
+}
+
+bool handleRTC() {
+  Wire.setPins(23, 18);
+  if (!rtc.begin()) {
+    Serial.println("RTC initialization failed!");
+    return false;
+  }
+
+  Serial.println("RTC initialized successfully.");
   return true;
 }
