@@ -385,3 +385,24 @@ DateTime stringToDateTime(const char *timeString) {
   // Create a new DateTime object with the parsed time and current date
   return DateTime(now.year(), now.month(), now.day(), hour, minute, 0);
 }
+
+bool updateRTCFromNTP() {
+  // Start the NTP client
+  timeClient.begin();
+
+  // Attempt to get the time from the NTP server
+  if (!timeClient.update()) {
+    Serial.println("Failed to get time from NTP server");
+    return false;
+  }
+
+  // Get the current time as epoch time
+  unsigned long epochTime = timeClient.getEpochTime();
+
+  // Convert the epoch time to a DateTime object
+  DateTime ntpTime = DateTime(epochTime);
+
+  // Update the RTC with the new time
+  rtc.adjust(ntpTime);
+  return true;
+}
