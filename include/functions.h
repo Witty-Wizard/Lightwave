@@ -121,4 +121,6 @@ bool updateWiFiCredentials(const char *newSSID, const char *newPassword);
  */
 bool saveTimeSettings(const char *onTime, const char *offTime);
 
+bool handleRTC();
+
 #endif // FUNCTIONS_H
