@@ -11,6 +11,10 @@ document.addEventListener("DOMContentLoaded", function () {
     defaultTime: "now",
     autoClose: true,
   });
+
+  // Initialize the clock
+  updateClock();
+  setInterval(updateClock, 1000); // Update the clock every second
 });
 
 // Wi-Fi Form Submission
@@ -89,3 +93,15 @@ document
           "Error: Unable to set time";
       });
   });
+
+// Function to update the clock
+function updateClock() {
+  const clockElement = document.getElementById("digitalClock");
+  const now = new Date();
+  let hours = now.getHours();
+  const minutes = now.getMinutes().toString().padStart(2, "0");
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12 || 12; // Convert to 12-hour format
+
+  clockElement.innerHTML = `${hours}<span class="blinking-colon">:</span>${minutes} ${ampm}`;
+}
