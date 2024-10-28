@@ -7,3 +7,6 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org", 19800);
 
 bool rtcFailed = false;
 bool ntpFailed = false;
+
+DateTime turnOn;
+DateTime turnOff;

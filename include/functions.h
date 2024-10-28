@@ -160,4 +160,6 @@ DateTime stringToDateTime(const char *timeString);
  */
 bool updateRTCFromNTP();
 
+JsonDocument loadConfigurationTime();
+
 #endif // FUNCTIONS_H

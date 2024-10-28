@@ -14,6 +14,7 @@
 void setup() {
   Serial.begin(115200);
   JsonDocument config = loadConfiguration();
+  JsonDocument timeConfig = loadConfigurationTime();
   char ssid[32];
   char password[64];
 
@@ -21,6 +22,10 @@ void setup() {
                          config)) {
     handleAP(ssid, sizeof(ssid), password, sizeof(password), config);
   }
+  String onTime = timeConfig["onTime"] | "";
+  String offTime = timeConfig["offTime"] | "";
+  turnOff = stringToDateTime(offTime.c_str());
+  // turnOff = stringToDateTime(onTime.c_str());
 
   rtcFailed = !handleRTC();
   ntpFailed = !updateRTCFromNTP();
@@ -29,24 +34,21 @@ void setup() {
 }
 
 void loop() {
+  DateTime now;
   if (!rtcFailed) {
-    DateTime now = rtc.now();
-    Serial.print("Current RTC Time: ");
-    Serial.print(now.hour());
-    Serial.print(":");
-    Serial.print(now.minute());
-    Serial.print(":");
-    Serial.println(now.second());
+    now = rtc.now();
   } else if (!ntpFailed) {
     timeClient.update();
-    DateTime now = DateTime(timeClient.getEpochTime());
-    Serial.print("Current NTP Time: ");
-    Serial.print(now.hour());
-    Serial.print(":");
-    Serial.print(now.minute());
-    Serial.print(":");
-    Serial.println(now.second());
+    now = DateTime(timeClient.getEpochTime());
   } else {
     // Blink an led for error here
+  }
+
+  if ((now.hour() == turnOff.hour()) && (now.minute() == turnOff.minute())) {
+    Serial.println("led off");
+  }
+
+  if ((now.hour() == turnOn.hour()) && (now.minute() == turnOn.minute())) {
+    Serial.println("led on");
   }
 }
