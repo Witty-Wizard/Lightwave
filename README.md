@@ -1,5 +1,6 @@
 <p align="center">
   <img src="https://img.shields.io/github/v/release/Witty-Wizard/LightWave" alt="GitHub Release">
+  <a href="https://witty-wizard.github.io/LightWave"><img src="https://img.shields.io/badge/-Doxygen-2C4AA8?style=flat&logo=doxygen&logoColor=white" alt="Doxygen"></a>
   <img src="https://img.shields.io/github/stars/Witty-Wizard/LightWave?style=flat" alt="GitHub Repo stars">
   <img alt="GitHub Issues or Pull Requests" src="https://img.shields.io/github/issues/Witty-Wizard/LightWave">
   <img alt="GitHub forks" src="https://img.shields.io/github/forks/Witty-Wizard/LightWave?style=flat">
