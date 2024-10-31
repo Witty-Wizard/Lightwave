@@ -242,11 +242,12 @@ void handleWebServer() {
           }
 
           // Extract onTime and offTime from the JSON document
-          String currentTime = doc["currentTime"] | "";
+          unsigned int currentTime = doc["currentTime"] | 0;
+          Serial.println(currentTime);
 
           // Check if both onTime and offTime are present
-          if (currentTime != "") {
-            DateTime parsedTime = stringToDateTime(currentTime.c_str());
+          if (currentTime != 0) {
+            DateTime parsedTime = DateTime(currentTime);
             rtc.adjust(parsedTime);
             request->send(200, "text/plain",
                           "Time settings received and saved successfully.");

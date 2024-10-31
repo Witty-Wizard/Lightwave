@@ -85,8 +85,16 @@ document
 document
   .getElementById("timeForm")
   .addEventListener("submit", function (event) {
-    event.preventDefault(currentTime);
-    const currentTime = document.getElementById("currentTime").value;
+    event.preventDefault();
+    const currentTimeString = document.getElementById("currentTime").value;
+
+    if (!currentTimeString) {
+      document.getElementById("setupResponse").innerText =
+        "Please fill out all fields.";
+      return;
+    }
+
+    const currentTime = convertToEpoch(currentTimeString);
 
     fetch("/setTime", {
       method: "POST",
