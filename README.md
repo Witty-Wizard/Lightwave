@@ -25,3 +25,10 @@ LightWave is a project built using the ESP32 microcontroller. It provides a web-
 - **Relay Module** for controlling appliances
 - **Power Supply**
 - **Optional**: Enclosure for the device
+
+## WiFi Credentials
+> [!Note]
+> You can change them through the webportal, go to `lightwave.local`
+- **SSID**: LightWave
+- **Password**: therebelight
+
