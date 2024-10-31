@@ -36,37 +36,6 @@ JsonDocument loadConfiguration() {
   return doc;
 }
 
-JsonDocument loadConfigurationTime() {
-  if (!LittleFS.begin()) {
-
-    Serial.println(
-        "An error has occurred while mounting or formatting LittleFS");
-    return JsonDocument();
-  }
-  JsonDocument doc;
-  File file = LittleFS.open("/time.json", "r");
-  if (!file) {
-    Serial.println("Failed to open configuration file");
-    return doc;
-  }
-
-  DeserializationError error = deserializeJson(doc, file);
-  if (error) {
-    Serial.print("Failed to parse configuration file: ");
-    Serial.println(error.f_str());
-    file.close();
-    return doc;
-  }
-
-  if (doc.isNull()) {
-    Serial.println("Failed to load configuration");
-    return JsonDocument();
-  }
-
-  file.close();
-  return doc;
-}
-
 bool handleWiFiStation(char *ssid, size_t ssid_n, char *password,
                        size_t password_n, JsonDocument config) {
 
@@ -394,42 +363,6 @@ bool handleRTC() {
 
   Serial.println("RTC initialized successfully.");
   return true;
-}
-
-DateTime stringToDateTime(const char *timeString) {
-  // Check if the timeString length is valid (8 or 9 characters: "hh:mm AM/PM")
-  size_t len = strlen(timeString);
-  if (len < 8 || len > 9 || timeString[2] != ':' ||
-      (strstr(timeString, "AM") == nullptr &&
-       strstr(timeString, "PM") == nullptr)) {
-    Serial.println("Invalid time format");
-    return DateTime(2000, 1, 1, 0, 0, 0); // Return a default DateTime on error
-  }
-
-  // Extract the hour, minute, and period (AM/PM) components
-  int hour = (timeString[0] - '0') * 10 + (timeString[1] - '0');
-  int minute = (timeString[3] - '0') * 10 + (timeString[4] - '0');
-  char period[3] = {timeString[len - 2], timeString[len - 1], '\0'};
-
-  // Validate the hour, minute, and period
-  if (hour < 1 || hour > 12 || minute < 0 || minute > 59 ||
-      (strcmp(period, "AM") != 0 && strcmp(period, "PM") != 0)) {
-    Serial.println("Invalid hour, minute, or period value");
-    return DateTime(2000, 1, 1, 0, 0, 0); // Return a default DateTime on error
-  }
-
-  // Convert hour to 24-hour format
-  if (strcmp(period, "PM") == 0 && hour != 12) {
-    hour += 12;
-  } else if (strcmp(period, "AM") == 0 && hour == 12) {
-    hour = 0;
-  }
-
-  // Get the current date from the RTC
-  DateTime now = rtc.now();
-
-  // Create a new DateTime object with the parsed time and current date
-  return DateTime(now.year(), now.month(), now.day(), hour, minute, 0);
 }
 
 bool updateRTCFromNTP() {

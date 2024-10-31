@@ -133,21 +133,6 @@ bool saveTimeSettings(unsigned int onTime, unsigned int offTime);
 bool handleRTC();
 
 /**
- * @brief Converts a time string in "hh:mm AM/PM" format (char*) to a DateTime
- * object based on the current date from the RTC.
- *
- * This function takes a time string in the format "hh:mm AM/PM" and converts it
- * to a DateTime object using the current date obtained from the RTC. If the
- * time string is invalid, the function returns a default DateTime object set to
- * 2000-01-01 00:00:00.
- *
- * @param timeString The time string in the format "hh:mm AM/PM" as a char*.
- * @return DateTime The DateTime object representing the parsed time, or a
- * default DateTime (2000-01-01 00:00:00) if parsing fails.
- */
-DateTime stringToDateTime(const char *timeString);
-
-/**
  * @brief Updates the RTC time using the NTP server.
  *
  * This function synchronizes the Real Time Clock (RTC) with the NTP server
@@ -158,7 +143,5 @@ DateTime stringToDateTime(const char *timeString);
  * otherwise.
  */
 bool updateRTCFromNTP();
-
-JsonDocument loadConfigurationTime();
 
 #endif // FUNCTIONS_H
