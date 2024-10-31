@@ -169,7 +169,6 @@ void handleWebServer() {
 
         // Accumulate data chunks into the body string
         body += String((char *)data).substring(0, len);
-
         // If the entire body is received
         if (index + len == total) {
           // Create a JSON document to parse the body
@@ -190,18 +189,19 @@ void handleWebServer() {
           }
 
           // Extract onTime and offTime from the JSON document
-          String onTime = doc["onTime"] | "";
-          String offTime = doc["offTime"] | "";
+          int onTime = doc["onTime"] | 0;
+          int offTime = doc["offTime"] | 0;
 
           // Check if both onTime and offTime are present
-          if (onTime != "" && offTime != "") {
-            Serial.printf("Received onTime: %s, offTime: %s\n", onTime.c_str(),
-                          offTime.c_str());
+          if (onTime != 0 && offTime != 0) {
+            Serial.printf("Received onTime: %i, offTime: %i\n", onTime,
+                          offTime);
 
             // Save the time settings in LittleFS
-            if (saveTimeSettings(onTime.c_str(), offTime.c_str())) {
+            if (saveTimeSettings(onTime, offTime)) {
               request->send(200, "text/plain",
                             "Time settings received and saved successfully.");
+              ESP.restart();
             } else {
               request->send(500, "text/plain", "Failed to save time settings.");
             }
@@ -305,7 +305,7 @@ bool updateWiFiCredentials(const char *newSSID, const char *newPassword) {
   return true;
 }
 
-bool saveTimeSettings(const char *onTime, const char *offTime) {
+bool saveTimeSettings(unsigned int onTime, unsigned int offTime) {
   // Initialize LittleFS if not already mounted
   if (!LittleFS.begin()) {
     Serial.println(
@@ -315,11 +315,27 @@ bool saveTimeSettings(const char *onTime, const char *offTime) {
 
   // Create a JSON document to store the time settings
   JsonDocument doc;
+  File file = LittleFS.open("/config.json", "r+");
+  if (!file) {
+    Serial.println("Failed to open time settings file for writing");
+    return false;
+  }
+
+  DeserializationError error = deserializeJson(doc, file);
+  if (error) {
+    Serial.print("Failed to parse configuration file: ");
+    Serial.println(error.f_str());
+    file.close();
+    return false;
+  }
+  if (doc.isNull()) {
+    Serial.println("Failed to load configuration");
+    return false;
+  }
   doc["onTime"] = onTime;
   doc["offTime"] = offTime;
 
-  // Open the configuration file for writing (overwrite mode)
-  File file = LittleFS.open("/time.json", "w");
+  file = LittleFS.open("/config.json", "w");
   if (!file) {
     Serial.println("Failed to open time settings file for writing");
     return false;
@@ -334,8 +350,7 @@ bool saveTimeSettings(const char *onTime, const char *offTime) {
 
   // Close the file
   file.close();
-  Serial.println("Time settings saved successfully to /time.json");
-  ESP.restart();
+  Serial.println("Time settings saved successfully to /config.json");
   return true;
 }
 

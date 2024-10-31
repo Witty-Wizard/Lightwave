@@ -14,6 +14,9 @@
 void setup() {
   Serial.begin(115200);
   JsonDocument config = loadConfiguration();
+  serializeJson(config, Serial);
+  turnOn = DateTime((unsigned int)config["onTime"]);
+  turnOff = DateTime((unsigned int)config["offTime"]);
   char ssid[32];
   char password[64];
 
@@ -29,24 +32,24 @@ void setup() {
 }
 
 void loop() {
-  if (!rtcFailed) {
-    DateTime now = rtc.now();
-    Serial.print("Current RTC Time: ");
-    Serial.print(now.hour());
-    Serial.print(":");
-    Serial.print(now.minute());
-    Serial.print(":");
-    Serial.println(now.second());
-  } else if (!ntpFailed) {
-    timeClient.update();
-    DateTime now = DateTime(timeClient.getEpochTime());
-    Serial.print("Current NTP Time: ");
-    Serial.print(now.hour());
-    Serial.print(":");
-    Serial.print(now.minute());
-    Serial.print(":");
-    Serial.println(now.second());
-  } else {
-    // Blink an led for error here
-  }
+  // if (!rtcFailed) {
+  //   DateTime now = rtc.now();
+  //   Serial.print("Current RTC Time: ");
+  //   Serial.print(now.hour());
+  //   Serial.print(":");
+  //   Serial.print(now.minute());
+  //   Serial.print(":");
+  //   Serial.println(now.second());
+  // } else if (!ntpFailed) {
+  //   timeClient.update();
+  //   DateTime now = DateTime(timeClient.getEpochTime());
+  //   Serial.print("Current NTP Time: ");
+  //   Serial.print(now.hour());
+  //   Serial.print(":");
+  //   Serial.print(now.minute());
+  //   Serial.print(":");
+  //   Serial.println(now.second());
+  // } else {
+  //   // Blink an led for error here
+  // }
 }

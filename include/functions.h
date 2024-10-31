@@ -113,21 +113,20 @@ bool updateWiFiCredentials(const char *newSSID, const char *newPassword);
  * settings. If the file cannot be opened or the settings cannot be saved, the
  * function returns false.
  *
- * @param onTime The time when the light should be turned on (in string format,
- * e.g., "08:00").
- * @param offTime The time when the light should be turned off (in string
- * format, e.g., "18:00").
+ * @param onTime The time when the light should be turned on (unix epoch time).
+ * @param offTime The time when the light should be turned off (unix epoch
+ * time).
  * @return true if the time settings are successfully saved, false otherwise.
  */
-bool saveTimeSettings(const char *onTime, const char *offTime);
+bool saveTimeSettings(unsigned int onTime, unsigned int offTime);
 
 /**
  * @brief Initializes and configures the RTC for the device.
  *
  * This function sets up the Real Time Clock (RTC) on the ESP32 device. It
- * should be called during the setup process to ensure the RTC is running and
- * has accurate time. If the RTC fails to initialize, the function returns
- * false.
+ * should be called during the setup process to ensure the RTC is running
+ * and has accurate time. If the RTC fails to initialize, the function
+ * returns false.
  *
  * @return true if the RTC is successfully initialized, false otherwise.
  */
