@@ -3,13 +3,54 @@ document.addEventListener("DOMContentLoaded", function () {
   // Initialize tabs
   var tabsElems = document.querySelectorAll(".tabs");
   M.Tabs.init(tabsElems);
+  const toggleButton = document.getElementById("toggleButton");
+  let isOn = true;
+  fetch("/toggleGet", {
+    method: "GET", // Use GET since we're not sending any data
+    headers: {
+      "Content-Type": "application/json",
+    },
+  }).then((response) => response.json())
+  .then((data) => {
+    isOn = data.isOn;
+
+    toggleButton.textContent = isOn ? "On" : "Off";
+    toggleButton.classList.toggle("green-button", isOn);
+    toggleButton.classList.toggle("red-button", !isOn);
+  })
+  .catch((error) => {
+    console.error("Error:", error);
+  });
+  toggleButton.textContent = isOn ? "On" : "Off";
 
   // Initialize time pickers
   var timepickerElems = document.querySelectorAll(".timepicker");
   M.Timepicker.init(timepickerElems, {
-      twelveHour: true,
-      defaultTime: "now",
-      autoClose: true,
+    twelveHour: true,
+    defaultTime: "now",
+    autoClose: true,
+  });
+
+  toggleButton.classList.add("green-button");
+
+  toggleButton.addEventListener("click", function () {
+    fetch("/toggle", {
+      method: "GET", // Use GET since we're not sending any data
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        isOn = data.isOn;
+
+        toggleButton.textContent = isOn ? "On" : "Off";
+        toggleButton.classList.toggle("green-button", isOn);
+        toggleButton.classList.toggle("red-button", !isOn);
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
   });
 
   // Initialize the clock
@@ -52,14 +93,18 @@ document
   .getElementById("setupForm")
   .addEventListener("submit", function (event) {
     event.preventDefault();
-    const onTime = document.getElementById("onTime").value;
-    const offTime = document.getElementById("offTime").value;
+    const onTimeString = document.getElementById("onTime").value;
+    const offTimeString = document.getElementById("offTime").value;
 
-    if (!onTime || !offTime) {
+    if (!onTimeString || !offTimeString) {
       document.getElementById("setupResponse").innerText =
         "Please fill out all fields.";
       return;
     }
+
+    // Convert onTime and offTime to epoch times
+    const onTime = convertToEpoch(onTimeString);
+    const offTime = convertToEpoch(offTimeString);
 
     fetch("/setup", {
       method: "POST",
@@ -82,7 +127,15 @@ document
   .getElementById("timeForm")
   .addEventListener("submit", function (event) {
     event.preventDefault();
-    const currentTime = document.getElementById("currentTime").value;
+    const currentTimeString = document.getElementById("currentTime").value;
+
+    if (!currentTimeString) {
+      document.getElementById("setupResponse").innerText =
+        "Please fill out all fields.";
+      return;
+    }
+
+    const currentTime = convertToEpoch(currentTimeString);
 
     fetch("/setTime", {
       method: "POST",
@@ -110,4 +163,29 @@ function updateClock() {
   hours = hours % 12 || 12; // Convert to 12-hour format
 
   clockElement.innerHTML = `${hours}<span class="blinking-colon">:</span>${minutes} ${ampm}`;
+}
+
+function convertToEpoch(timeString) {
+  const [time, modifier] = timeString.split(" ");
+  let [hours, minutes] = time.split(":");
+  hours = parseInt(hours, 10);
+
+  // Adjust hours for AM/PM
+  if (modifier === "PM" && hours !== 12) hours += 12;
+  if (modifier === "AM" && hours === 12) hours = 0;
+
+  // Create a new Date object with today's date and the parsed time
+  const now = new Date();
+  const dateWithTime = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    hours,
+    parseInt(minutes, 10)
+  );
+
+  const timezoneOffset = dateWithTime.getTimezoneOffset() * 60;
+
+  // Convert to epoch time in seconds
+  return Math.floor(dateWithTime.getTime() / 1000) - timezoneOffset;
 }
