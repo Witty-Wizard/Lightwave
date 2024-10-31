@@ -256,6 +256,23 @@ void handleWebServer() {
         }
       });
 
+  server.on("/toggle", HTTP_GET, [](AsyncWebServerRequest *request) {
+    // Toggle the state of isOn
+    isOn = !isOn;
+
+    // Send the current state as a JSON response
+    String response = "{\"isOn\": " + String(isOn ? "true" : "false") + "}";
+    request->send(200, "application/json", response);
+
+    // Log the current state to Serial Monitor
+    Serial.println("State toggled: " + String(isOn ? "On" : "Off"));
+  });
+
+  server.on("/toggleGet", HTTP_GET, [](AsyncWebServerRequest *request) {
+    String response = "{\"isOn\": " + String(isOn ? "true" : "false") + "}";
+    request->send(200, "application/json", response);
+  });
+
   server.serveStatic("/", LittleFS, "/");
   server.begin();
   Serial.println("Web server started");

@@ -94,3 +94,40 @@ body {
   opacity: 0;
   transition: opacity 0.5s ease;
 }
+
+#onOffControl {
+  margin-top: 20px;
+  text-align: center;
+}
+
+#toggleButton {
+  min-width: 120px;
+  min-height: 120px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  font-weight: 500;
+  padding: 10px;
+  aspect-ratio: 1;
+}
+
+.red-button {
+  background-color: transparent !important; /* Transparent background */
+  color: #26a69a !important; /* Teal text color */
+  border: 2px solid #26a69a !important; /* Teal outline around the button */
+  text-transform: uppercase; /* Optional: To make text more visible and styled */
+}
+
+.red-button::before {
+  content: attr(data-text); /* Duplicate text for outline effect */
+  position: absolute;
+  left: 0;
+  right: 0;
+  color: transparent; /* Make text transparent */
+  -webkit-text-stroke: 1px #26a69a; /* Teal outline around the text */
+  z-index: -1; /* Keep original text above the outline */
+  pointer-events: none; /* Prevents duplicate text from affecting click events */
+}
+

@@ -19,4 +19,6 @@ extern bool ntpFailed;
 extern DateTime turnOff;
 extern DateTime turnOn;
 
+extern bool isOn;
+
 #endif

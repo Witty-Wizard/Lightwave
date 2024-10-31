@@ -9,3 +9,5 @@ bool rtcFailed = false;
 bool ntpFailed = false;
 DateTime turnOff;
 DateTime turnOn;
+
+bool isOn = false;

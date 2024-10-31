@@ -3,6 +3,25 @@ document.addEventListener("DOMContentLoaded", function () {
   // Initialize tabs
   var tabsElems = document.querySelectorAll(".tabs");
   M.Tabs.init(tabsElems);
+  const toggleButton = document.getElementById("toggleButton");
+  let isOn = true;
+  fetch("/toggleGet", {
+    method: "GET", // Use GET since we're not sending any data
+    headers: {
+      "Content-Type": "application/json",
+    },
+  }).then((response) => response.json())
+  .then((data) => {
+    isOn = data.isOn;
+
+    toggleButton.textContent = isOn ? "On" : "Off";
+    toggleButton.classList.toggle("green-button", isOn);
+    toggleButton.classList.toggle("red-button", !isOn);
+  })
+  .catch((error) => {
+    console.error("Error:", error);
+  });
+  toggleButton.textContent = isOn ? "On" : "Off";
 
   // Initialize time pickers
   var timepickerElems = document.querySelectorAll(".timepicker");
@@ -10,6 +29,28 @@ document.addEventListener("DOMContentLoaded", function () {
     twelveHour: true,
     defaultTime: "now",
     autoClose: true,
+  });
+
+  toggleButton.classList.add("green-button");
+
+  toggleButton.addEventListener("click", function () {
+    fetch("/toggle", {
+      method: "GET", // Use GET since we're not sending any data
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        isOn = data.isOn;
+
+        toggleButton.textContent = isOn ? "On" : "Off";
+        toggleButton.classList.toggle("green-button", isOn);
+        toggleButton.classList.toggle("red-button", !isOn);
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
   });
 
   // Initialize the clock
