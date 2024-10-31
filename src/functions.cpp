@@ -201,7 +201,6 @@ void handleWebServer() {
             if (saveTimeSettings(onTime, offTime)) {
               request->send(200, "text/plain",
                             "Time settings received and saved successfully.");
-              ESP.restart();
             } else {
               request->send(500, "text/plain", "Failed to save time settings.");
             }
@@ -335,6 +334,9 @@ bool saveTimeSettings(unsigned int onTime, unsigned int offTime) {
   }
   doc["onTime"] = onTime;
   doc["offTime"] = offTime;
+
+  turnOn = DateTime(onTime);
+  turnOff = DateTime(offTime);
 
   file = LittleFS.open("/config.json", "w");
   if (!file) {
