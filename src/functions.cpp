@@ -137,11 +137,11 @@ void handleWebServer() {
     request->send(LittleFS, "/index.html", "text/html");
   });
 
-  server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request) {
+  server.on("css/style.css", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(LittleFS, "/style.css", "text/css");
   });
 
-  server.on("/script.js", HTTP_GET, [](AsyncWebServerRequest *request) {
+  server.on("js/script.js", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(LittleFS, "/script.js", "application/javascript");
   });
 

@@ -7,14 +7,20 @@ document.addEventListener("DOMContentLoaded", function () {
   // Initialize time pickers
   var timepickerElems = document.querySelectorAll(".timepicker");
   M.Timepicker.init(timepickerElems, {
-    twelveHour: true,
-    defaultTime: "now",
-    autoClose: true,
+      twelveHour: true,
+      defaultTime: "now",
+      autoClose: true,
   });
 
   // Initialize the clock
   updateClock();
-  setInterval(updateClock, 1000); // Update the clock every second
+  setInterval(updateClock, 1000);
+
+  // Hide loading screen and show content
+  document.getElementById("loadingOverlay").style.display = "none";
+  const content = document.getElementById("content");
+  content.style.visibility = "visible";
+  content.style.opacity = "1"; // Fade in the content
 });
 
 // Wi-Fi Form Submission
