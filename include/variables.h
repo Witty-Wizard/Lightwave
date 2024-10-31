@@ -20,5 +20,9 @@ extern DateTime turnOff;
 extern DateTime turnOn;
 
 extern bool isOn;
+extern bool validOnOffTimes;
+
+extern const int errorLedPin;
+extern const int relayPin;
 
 #endif

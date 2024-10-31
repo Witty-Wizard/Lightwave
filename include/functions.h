@@ -144,4 +144,16 @@ bool handleRTC();
  */
 bool updateRTCFromNTP();
 
+/**
+ * @brief Blinks an error LED to indicate a failure in both NTP and RTC.
+ *
+ * This function continuously blinks an LED connected to `errorLedPin`
+ * with a 500 ms on/off interval. It is called when both NTP and RTC
+ * time synchronization fail, providing a visual indication of an error.
+ *
+ * @note This function runs in an infinite loop and halts further
+ * execution of the program.
+ */
+void blinkErrorLed();
+
 #endif // FUNCTIONS_H

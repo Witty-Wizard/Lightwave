@@ -354,6 +354,7 @@ bool saveTimeSettings(unsigned int onTime, unsigned int offTime) {
 
   turnOn = DateTime(onTime);
   turnOff = DateTime(offTime);
+  validOnOffTimes = true;
 
   file = LittleFS.open("/config.json", "w");
   if (!file) {
@@ -404,4 +405,13 @@ bool updateRTCFromNTP() {
   // Update the RTC with the new time
   rtc.adjust(ntpTime);
   return true;
+}
+
+void blinkErrorLed() {
+  while (true) {
+    digitalWrite(errorLedPin, HIGH);
+    delay(500);
+    digitalWrite(errorLedPin, LOW);
+    delay(500);
+  }
 }

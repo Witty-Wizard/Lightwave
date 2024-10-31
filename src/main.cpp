@@ -13,10 +13,22 @@
 
 void setup() {
   Serial.begin(115200);
+  pinMode(errorLedPin, OUTPUT);
+  pinMode(relayPin, OUTPUT);
+  digitalWrite(errorLedPin, LOW);
+  digitalWrite(relayPin, LOW);
+
   JsonDocument config = loadConfiguration();
   serializeJson(config, Serial);
-  turnOn = DateTime((unsigned int)config["onTime"]);
-  turnOff = DateTime((unsigned int)config["offTime"]);
+
+  if (config.containsKey("onTime") && config.containsKey("offTime")) {
+    validOnOffTimes = true;
+    turnOn = DateTime((unsigned int)config["onTime"]);
+    turnOff = DateTime((unsigned int)config["offTime"]);
+  } else {
+    validOnOffTimes = false;
+  }
+
   char ssid[32];
   char password[64];
 
@@ -29,6 +41,27 @@ void setup() {
   ntpFailed = !updateRTCFromNTP();
   handleWebServer();
   handleMDNS();
+  if (ntpFailed && rtcFailed) {
+    blinkErrorLed();
+  }
 }
 
-void loop() {}
+void loop() {
+  if (validOnOffTimes) {
+    DateTime now;
+    if (!ntpFailed) {
+      now = DateTime(timeClient.getEpochTime());
+    } else if (!rtcFailed) {
+      now = rtc.now();
+    } else {
+      return;
+    }
+    if (now.hour() == turnOn.hour() && now.minute() == turnOn.minute()) {
+      isOn = true;
+    } else if (now.hour() == turnOff.hour() &&
+               now.minute() == turnOff.minute()) {
+      isOn = false;
+    }
+    digitalWrite(relayPin, HIGH);
+  }
+}
