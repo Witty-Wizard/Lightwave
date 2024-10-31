@@ -36,6 +36,37 @@ JsonDocument loadConfiguration() {
   return doc;
 }
 
+JsonDocument loadConfigurationTime() {
+  if (!LittleFS.begin()) {
+
+    Serial.println(
+        "An error has occurred while mounting or formatting LittleFS");
+    return JsonDocument();
+  }
+  JsonDocument doc;
+  File file = LittleFS.open("/time.json", "r");
+  if (!file) {
+    Serial.println("Failed to open configuration file");
+    return doc;
+  }
+
+  DeserializationError error = deserializeJson(doc, file);
+  if (error) {
+    Serial.print("Failed to parse configuration file: ");
+    Serial.println(error.f_str());
+    file.close();
+    return doc;
+  }
+
+  if (doc.isNull()) {
+    Serial.println("Failed to load configuration");
+    return JsonDocument();
+  }
+
+  file.close();
+  return doc;
+}
+
 bool handleWiFiStation(char *ssid, size_t ssid_n, char *password,
                        size_t password_n, JsonDocument config) {
 

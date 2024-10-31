@@ -31,25 +31,4 @@ void setup() {
   handleMDNS();
 }
 
-void loop() {
-  // if (!rtcFailed) {
-  //   DateTime now = rtc.now();
-  //   Serial.print("Current RTC Time: ");
-  //   Serial.print(now.hour());
-  //   Serial.print(":");
-  //   Serial.print(now.minute());
-  //   Serial.print(":");
-  //   Serial.println(now.second());
-  // } else if (!ntpFailed) {
-  //   timeClient.update();
-  //   DateTime now = DateTime(timeClient.getEpochTime());
-  //   Serial.print("Current NTP Time: ");
-  //   Serial.print(now.hour());
-  //   Serial.print(":");
-  //   Serial.print(now.minute());
-  //   Serial.print(":");
-  //   Serial.println(now.second());
-  // } else {
-  //   // Blink an led for error here
-  // }
-}
+void loop() {}
