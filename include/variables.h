@@ -16,7 +16,7 @@ extern NTPClient timeClient;
 extern bool rtcFailed;
 extern bool ntpFailed;
 
-extern DateTime turnOn;
 extern DateTime turnOff;
+extern DateTime turnOn;
 
 #endif

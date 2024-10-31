@@ -36,37 +36,6 @@ JsonDocument loadConfiguration() {
   return doc;
 }
 
-JsonDocument loadConfigurationTime() {
-  if (!LittleFS.begin()) {
-
-    Serial.println(
-        "An error has occurred while mounting or formatting LittleFS");
-    return JsonDocument();
-  }
-  JsonDocument doc;
-  File file = LittleFS.open("/time.json", "r");
-  if (!file) {
-    Serial.println("Failed to open configuration file");
-    return doc;
-  }
-
-  DeserializationError error = deserializeJson(doc, file);
-  if (error) {
-    Serial.print("Failed to parse configuration file: ");
-    Serial.println(error.f_str());
-    file.close();
-    return doc;
-  }
-
-  if (doc.isNull()) {
-    Serial.println("Failed to load configuration");
-    return JsonDocument();
-  }
-
-  file.close();
-  return doc;
-}
-
 bool handleWiFiStation(char *ssid, size_t ssid_n, char *password,
                        size_t password_n, JsonDocument config) {
 
@@ -200,7 +169,6 @@ void handleWebServer() {
 
         // Accumulate data chunks into the body string
         body += String((char *)data).substring(0, len);
-
         // If the entire body is received
         if (index + len == total) {
           // Create a JSON document to parse the body
@@ -221,18 +189,19 @@ void handleWebServer() {
           }
 
           // Extract onTime and offTime from the JSON document
-          String onTime = doc["onTime"] | "";
-          String offTime = doc["offTime"] | "";
+          int onTime = doc["onTime"] | 0;
+          int offTime = doc["offTime"] | 0;
 
           // Check if both onTime and offTime are present
-          if (onTime != "" && offTime != "") {
-            Serial.printf("Received onTime: %s, offTime: %s\n", onTime.c_str(),
-                          offTime.c_str());
+          if (onTime != 0 && offTime != 0) {
+            Serial.printf("Received onTime: %i, offTime: %i\n", onTime,
+                          offTime);
 
             // Save the time settings in LittleFS
-            if (saveTimeSettings(onTime.c_str(), offTime.c_str())) {
+            if (saveTimeSettings(onTime, offTime)) {
               request->send(200, "text/plain",
                             "Time settings received and saved successfully.");
+              ESP.restart();
             } else {
               request->send(500, "text/plain", "Failed to save time settings.");
             }
@@ -273,11 +242,12 @@ void handleWebServer() {
           }
 
           // Extract onTime and offTime from the JSON document
-          String currentTime = doc["currentTime"] | "";
+          unsigned int currentTime = doc["currentTime"] | 0;
+          Serial.println(currentTime);
 
           // Check if both onTime and offTime are present
-          if (currentTime != "") {
-            DateTime parsedTime = stringToDateTime(currentTime.c_str());
+          if (currentTime != 0) {
+            DateTime parsedTime = DateTime(currentTime);
             rtc.adjust(parsedTime);
             request->send(200, "text/plain",
                           "Time settings received and saved successfully.");
@@ -336,7 +306,7 @@ bool updateWiFiCredentials(const char *newSSID, const char *newPassword) {
   return true;
 }
 
-bool saveTimeSettings(const char *onTime, const char *offTime) {
+bool saveTimeSettings(unsigned int onTime, unsigned int offTime) {
   // Initialize LittleFS if not already mounted
   if (!LittleFS.begin()) {
     Serial.println(
@@ -346,11 +316,27 @@ bool saveTimeSettings(const char *onTime, const char *offTime) {
 
   // Create a JSON document to store the time settings
   JsonDocument doc;
+  File file = LittleFS.open("/config.json", "r+");
+  if (!file) {
+    Serial.println("Failed to open time settings file for writing");
+    return false;
+  }
+
+  DeserializationError error = deserializeJson(doc, file);
+  if (error) {
+    Serial.print("Failed to parse configuration file: ");
+    Serial.println(error.f_str());
+    file.close();
+    return false;
+  }
+  if (doc.isNull()) {
+    Serial.println("Failed to load configuration");
+    return false;
+  }
   doc["onTime"] = onTime;
   doc["offTime"] = offTime;
 
-  // Open the configuration file for writing (overwrite mode)
-  File file = LittleFS.open("/time.json", "w");
+  file = LittleFS.open("/config.json", "w");
   if (!file) {
     Serial.println("Failed to open time settings file for writing");
     return false;
@@ -365,8 +351,7 @@ bool saveTimeSettings(const char *onTime, const char *offTime) {
 
   // Close the file
   file.close();
-  Serial.println("Time settings saved successfully to /time.json");
-  ESP.restart();
+  Serial.println("Time settings saved successfully to /config.json");
   return true;
 }
 
@@ -379,42 +364,6 @@ bool handleRTC() {
 
   Serial.println("RTC initialized successfully.");
   return true;
-}
-
-DateTime stringToDateTime(const char *timeString) {
-  // Check if the timeString length is valid (8 or 9 characters: "hh:mm AM/PM")
-  size_t len = strlen(timeString);
-  if (len < 8 || len > 9 || timeString[2] != ':' ||
-      (strstr(timeString, "AM") == nullptr &&
-       strstr(timeString, "PM") == nullptr)) {
-    Serial.println("Invalid time format");
-    return DateTime(2000, 1, 1, 0, 0, 0); // Return a default DateTime on error
-  }
-
-  // Extract the hour, minute, and period (AM/PM) components
-  int hour = (timeString[0] - '0') * 10 + (timeString[1] - '0');
-  int minute = (timeString[3] - '0') * 10 + (timeString[4] - '0');
-  char period[3] = {timeString[len - 2], timeString[len - 1], '\0'};
-
-  // Validate the hour, minute, and period
-  if (hour < 1 || hour > 12 || minute < 0 || minute > 59 ||
-      (strcmp(period, "AM") != 0 && strcmp(period, "PM") != 0)) {
-    Serial.println("Invalid hour, minute, or period value");
-    return DateTime(2000, 1, 1, 0, 0, 0); // Return a default DateTime on error
-  }
-
-  // Convert hour to 24-hour format
-  if (strcmp(period, "PM") == 0 && hour != 12) {
-    hour += 12;
-  } else if (strcmp(period, "AM") == 0 && hour == 12) {
-    hour = 0;
-  }
-
-  // Get the current date from the RTC
-  DateTime now = rtc.now();
-
-  // Create a new DateTime object with the parsed time and current date
-  return DateTime(now.year(), now.month(), now.day(), hour, minute, 0);
 }
 
 bool updateRTCFromNTP() {
