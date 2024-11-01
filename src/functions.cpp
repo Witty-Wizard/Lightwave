@@ -60,7 +60,6 @@ bool handleWiFiStation(char *ssid, size_t ssid_n, char *password,
     }
   }
 
-  // Successful connection
   Serial.println("\nConnected to WiFi!");
   Serial.print("IP Address: ");
   Serial.println(WiFi.localIP());
@@ -118,153 +117,86 @@ void handleWebServer() {
       "/connect", HTTP_POST, [](AsyncWebServerRequest *request) {}, nullptr,
       [](AsyncWebServerRequest *request, uint8_t *data, size_t len,
          size_t index, size_t total) {
-        String body;
+        handleJsonRequest(
+            request, data, len, index, total,
+            [](AsyncWebServerRequest *request, JsonDocument &doc) {
+              String ssid = doc["ssid"] | "";
+              String password = doc["password"] | "";
 
-        for (size_t i = 0; i < len; i++) {
-          body += (char)data[i];
-        }
+              if (ssid != "" && password != "") {
+                Serial.printf("Received SSID: %s, Password: %s\n", ssid.c_str(),
+                              password.c_str());
 
-        if (index + len == total) {
-          JsonDocument doc;
-
-          DeserializationError error = deserializeJson(doc, body);
-
-          if (error) {
-            Serial.print("JSON parsing failed: ");
-            Serial.println(error.c_str());
-            request->send(400, "text/plain", "Invalid JSON");
-            return;
-          }
-
-          String ssid = doc["ssid"] | "";
-          String password = doc["password"] | "";
-
-          if (ssid != "" && password != "") {
-            Serial.printf("Received SSID: %s, Password: %s\n", ssid.c_str(),
-                          password.c_str());
-
-            if (updateWiFiCredentials(ssid.c_str(), password.c_str())) {
-              request->send(200, "text/plain",
-                            "Wi-Fi credentials received and saved. Attempting "
-                            "to connect...");
-              delay(500);
-              ESP.restart();
-            } else {
-              request->send(500, "text/plain",
-                            "Failed to save Wi-Fi credentials.");
-            }
-
-          } else {
-            request->send(400, "text/plain", "Missing SSID or Password");
-          }
-        }
+                if (updateWiFiCredentials(ssid.c_str(), password.c_str())) {
+                  request->send(200, "text/plain",
+                                "Wi-Fi credentials received and saved. "
+                                "Attempting to connect...");
+                  delay(500);
+                  ESP.restart();
+                } else {
+                  request->send(500, "text/plain",
+                                "Failed to save Wi-Fi credentials.");
+                }
+              } else {
+                request->send(400, "text/plain", "Missing SSID or Password");
+              }
+            });
       });
 
   server.on(
       "/setup", HTTP_POST, [](AsyncWebServerRequest *request) {}, nullptr,
       [](AsyncWebServerRequest *request, uint8_t *data, size_t len,
          size_t index, size_t total) {
-        // Static variable to accumulate the incoming body data
-        static String body;
+        handleJsonRequest(
+            request, data, len, index, total,
+            [](AsyncWebServerRequest *request, JsonDocument &doc) {
+              int onTime = doc["onTime"] | 0;
+              int offTime = doc["offTime"] | 0;
 
-        // Accumulate data chunks into the body string
-        body += String((char *)data).substring(0, len);
-        // If the entire body is received
-        if (index + len == total) {
-          // Create a JSON document to parse the body
-          JsonDocument doc;
+              if (onTime != 0 && offTime != 0) {
+                Serial.printf("Received onTime: %i, offTime: %i\n", onTime,
+                              offTime);
 
-          // Parse the JSON payload
-          DeserializationError error = deserializeJson(doc, body);
-
-          // Clear the body string for the next request
-          body = "";
-
-          // Check for JSON parsing errors
-          if (error) {
-            Serial.print("JSON parsing failed: ");
-            Serial.println(error.c_str());
-            request->send(400, "text/plain", "Invalid JSON");
-            return;
-          }
-
-          // Extract onTime and offTime from the JSON document
-          int onTime = doc["onTime"] | 0;
-          int offTime = doc["offTime"] | 0;
-
-          // Check if both onTime and offTime are present
-          if (onTime != 0 && offTime != 0) {
-            Serial.printf("Received onTime: %i, offTime: %i\n", onTime,
-                          offTime);
-
-            // Save the time settings in LittleFS
-            if (saveTimeSettings(onTime, offTime)) {
-              request->send(200, "text/plain",
-                            "Time settings received and saved successfully.");
-            } else {
-              request->send(500, "text/plain", "Failed to save time settings.");
-            }
-
-          } else {
-            request->send(400, "text/plain", "Missing onTime or offTime");
-          }
-        }
+                if (saveTimeSettings(onTime, offTime)) {
+                  request->send(
+                      200, "text/plain",
+                      "Time settings received and saved successfully.");
+                } else {
+                  request->send(500, "text/plain",
+                                "Failed to save time settings.");
+                }
+              } else {
+                request->send(400, "text/plain", "Missing onTime or offTime");
+              }
+            });
       });
 
   server.on(
       "/setTime", HTTP_POST, [](AsyncWebServerRequest *request) {}, nullptr,
       [](AsyncWebServerRequest *request, uint8_t *data, size_t len,
          size_t index, size_t total) {
-        // Static variable to accumulate the incoming body data
-        static String body;
+        handleJsonRequest(
+            request, data, len, index, total,
+            [](AsyncWebServerRequest *request, JsonDocument &doc) {
+              unsigned int currentTime = doc["currentTime"] | 0;
 
-        // Accumulate data chunks into the body string
-        body += String((char *)data).substring(0, len);
-
-        // If the entire body is received
-        if (index + len == total) {
-          // Create a JSON document to parse the body
-          JsonDocument doc;
-
-          // Parse the JSON payload
-          DeserializationError error = deserializeJson(doc, body);
-
-          // Clear the body string for the next request
-          body = "";
-
-          // Check for JSON parsing errors
-          if (error) {
-            Serial.print("JSON parsing failed: ");
-            Serial.println(error.c_str());
-            request->send(400, "text/plain", "Invalid JSON");
-            return;
-          }
-
-          // Extract onTime and offTime from the JSON document
-          unsigned int currentTime = doc["currentTime"] | 0;
-          Serial.println(currentTime);
-
-          // Check if both onTime and offTime are present
-          if (currentTime != 0) {
-            DateTime parsedTime = DateTime(currentTime);
-            rtc.adjust(parsedTime);
-            request->send(200, "text/plain",
-                          "Time settings received and saved successfully.");
-          } else {
-            request->send(400, "text/plain", "Missing Current Time");
-          }
-        }
+              if (currentTime != 0) {
+                DateTime parsedTime = DateTime(currentTime);
+                rtc.adjust(parsedTime);
+                request->send(200, "text/plain",
+                              "Time settings received and saved successfully.");
+              } else {
+                request->send(400, "text/plain", "Missing Current Time");
+              }
+            });
       });
 
   server.on("/toggle", HTTP_GET, [](AsyncWebServerRequest *request) {
-    // Toggle the state of isOn
     isOn = !isOn;
 
-    // Send the current state as a JSON response
     String response = "{\"isOn\": " + String(isOn ? "true" : "false") + "}";
     request->send(200, "application/json", response);
 
-    // Log the current state to Serial Monitor
     Serial.println("State toggled: " + String(isOn ? "On" : "Off"));
   });
 
@@ -323,14 +255,12 @@ bool updateWiFiCredentials(const char *newSSID, const char *newPassword) {
 }
 
 bool saveTimeSettings(unsigned int onTime, unsigned int offTime) {
-  // Initialize LittleFS if not already mounted
   if (!LittleFS.begin()) {
     Serial.println(
         "An error has occurred while mounting or formatting LittleFS");
     return false;
   }
 
-  // Create a JSON document to store the time settings
   JsonDocument doc;
   File file = LittleFS.open("/config.json", "r+");
   if (!file) {
@@ -362,14 +292,12 @@ bool saveTimeSettings(unsigned int onTime, unsigned int offTime) {
     return false;
   }
 
-  // Serialize the JSON document and write it to the file
   if (serializeJson(doc, file) == 0) {
     Serial.println("Failed to write time settings to file");
     file.close();
     return false;
   }
 
-  // Close the file
   file.close();
   Serial.println("Time settings saved successfully to /config.json");
   return true;
@@ -387,22 +315,17 @@ bool handleRTC() {
 }
 
 bool updateRTCFromNTP() {
-  // Start the NTP client
   timeClient.begin();
 
-  // Attempt to get the time from the NTP server
   if (!timeClient.update()) {
     Serial.println("Failed to get time from NTP server");
     return false;
   }
 
-  // Get the current time as epoch time
   unsigned long epochTime = timeClient.getEpochTime();
 
-  // Convert the epoch time to a DateTime object
   DateTime ntpTime = DateTime(epochTime);
 
-  // Update the RTC with the new time
   rtc.adjust(ntpTime);
   return true;
 }
@@ -413,5 +336,28 @@ void blinkErrorLed() {
     delay(500);
     digitalWrite(errorLedPin, LOW);
     delay(500);
+  }
+}
+
+void handleJsonRequest(
+    AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index,
+    size_t total,
+    std::function<void(AsyncWebServerRequest *, JsonDocument &)> processData) {
+  static String body;
+  body += String((char *)data).substring(0, len);
+
+  if (index + len == total) {
+    JsonDocument doc;
+    DeserializationError error = deserializeJson(doc, body);
+    body = "";
+
+    if (error) {
+      Serial.print("JSON parsing failed: ");
+      Serial.println(error.c_str());
+      request->send(400, "text/plain", "Invalid JSON");
+      return;
+    }
+
+    processData(request, doc);
   }
 }
