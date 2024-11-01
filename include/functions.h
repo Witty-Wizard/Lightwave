@@ -11,8 +11,8 @@
  * connections, time synchronization, and serving files from LittleFS to create
  * a web interface for the ESP32.
  *
- * @version 1.1
- * @date 2024-10-28
+ * @version 0.1.0
+ * @date 2024-11-1
  * @author WittyWizard
  */
 
@@ -155,5 +155,34 @@ bool updateRTCFromNTP();
  * execution of the program.
  */
 void blinkErrorLed();
+
+/**
+ * @brief Handles JSON data received in an HTTP POST request.
+ *
+ * This function accumulates chunks of incoming JSON data, deserializes it, and
+ * processes it using a user-defined callback function. It also handles errors
+ * in JSON parsing and responds with appropriate status codes if the data is
+ * invalid.
+ *
+ * This function is useful when handling HTTP POST requests that send JSON data
+ * to the ESP32, such as configuration or command requests from a client
+ * interface.
+ *
+ * @param request Pointer to the AsyncWebServerRequest object representing the
+ * HTTP request.
+ * @param data Pointer to the incoming data chunk received in the request.
+ * @param len Length of the current data chunk.
+ * @param index Current index of the data chunk in the full data stream.
+ * @param total Total expected size of the complete data stream.
+ * @param processData A callback function that takes a reference to a
+ * JsonDocument and a pointer to AsyncWebServerRequest. This function is called
+ * to process the JSON data and respond to the client after successful
+ * deserialization.
+ *
+ */
+void handleJsonRequest(
+    AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index,
+    size_t total,
+    std::function<void(AsyncWebServerRequest *, JsonDocument &)> processData);
 
 #endif // FUNCTIONS_H
