@@ -105,16 +105,8 @@ void handleWebServer() {
     request->send(LittleFS, "/index.html", "text/html");
   });
 
-  server.on("css/style.css", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(LittleFS, "/style.css", "text/css");
-  });
-
-  server.on("js/script.js", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(LittleFS, "/script.js", "application/javascript");
-  });
-
   server.on(
-      "/connect", HTTP_POST, [](AsyncWebServerRequest *request) {}, nullptr,
+      "/api/connect", HTTP_POST, [](AsyncWebServerRequest *request) {}, nullptr,
       [](AsyncWebServerRequest *request, uint8_t *data, size_t len,
          size_t index, size_t total) {
         handleJsonRequest(
@@ -144,7 +136,7 @@ void handleWebServer() {
       });
 
   server.on(
-      "/setup", HTTP_POST, [](AsyncWebServerRequest *request) {}, nullptr,
+      "/api/setup", HTTP_POST, [](AsyncWebServerRequest *request) {}, nullptr,
       [](AsyncWebServerRequest *request, uint8_t *data, size_t len,
          size_t index, size_t total) {
         handleJsonRequest(
@@ -154,8 +146,11 @@ void handleWebServer() {
               int offTime = doc["offTime"] | 0;
 
               if (onTime != 0 && offTime != 0) {
-                Serial.printf("Received onTime: %i, offTime: %i\n", onTime,
-                              offTime);
+                DateTime onTimeParse = DateTime(onTime);
+                DateTime offTimeParse = DateTime(offTime);
+                Serial.printf("Received onTime: %i:%i, offTime: %i:%i \n",
+                              onTimeParse.hour(), onTimeParse.minute(),
+                              offTimeParse.hour(), offTimeParse.minute());
 
                 if (saveTimeSettings(onTime, offTime)) {
                   request->send(
@@ -172,7 +167,7 @@ void handleWebServer() {
       });
 
   server.on(
-      "/setTime", HTTP_POST, [](AsyncWebServerRequest *request) {}, nullptr,
+      "/api/setTime", HTTP_POST, [](AsyncWebServerRequest *request) {}, nullptr,
       [](AsyncWebServerRequest *request, uint8_t *data, size_t len,
          size_t index, size_t total) {
         handleJsonRequest(
@@ -191,7 +186,7 @@ void handleWebServer() {
             });
       });
 
-  server.on("/toggle", HTTP_GET, [](AsyncWebServerRequest *request) {
+  server.on("/api/toggle", HTTP_GET, [](AsyncWebServerRequest *request) {
     isOn = !isOn;
 
     String response = "{\"isOn\": " + String(isOn ? "true" : "false") + "}";
