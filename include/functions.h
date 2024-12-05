@@ -12,7 +12,7 @@
  * a web interface for the ESP32.
  *
  * @version 0.1.0
- * @date 2024-11-1
+ * @date 2024-12-6
  * @author WittyWizard
  */
 

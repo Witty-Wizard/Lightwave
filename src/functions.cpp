@@ -5,17 +5,43 @@
 #include <SPI.h>
 #include <WiFi.h>
 
+#define SSIDAP "Lightwave"
+#define PASSWORDAP "therebelight"
+
 JsonDocument loadConfiguration() {
   if (!LittleFS.begin()) {
-
     Serial.println(
         "An error has occurred while mounting or formatting LittleFS");
     return JsonDocument();
   }
+
   JsonDocument doc;
   File file = LittleFS.open("/config.json", "r");
   if (!file) {
-    Serial.println("Failed to open configuration file");
+    Serial.println(
+        "Configuration file not found, creating a new one with default values");
+
+    file = LittleFS.open("/config.json", "w");
+    if (!file) {
+      Serial.println("Failed to create configuration file");
+      return doc;
+    }
+
+#if defined(SSIDS) && defined(PASSWORDS)
+    doc["ssid"] = SSIDS;
+    doc["password"] = PASSWORDS;
+#endif
+    doc["ssidAP"] = SSIDAP;
+    doc["passwordAP"] = PASSWORDAP;
+
+    if (serializeJson(doc, file) == 0) {
+      Serial.println("Failed to write default configuration to file");
+      file.close();
+      return JsonDocument();
+    }
+
+    Serial.println("Default configuration saved");
+    file.close();
     return doc;
   }
 
@@ -24,7 +50,7 @@ JsonDocument loadConfiguration() {
     Serial.print("Failed to parse configuration file: ");
     Serial.println(error.f_str());
     file.close();
-    return doc;
+    return JsonDocument();
   }
 
   if (doc.isNull()) {
